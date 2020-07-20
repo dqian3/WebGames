@@ -57,6 +57,14 @@ class Card():
             return None
         return Card(self.card_type, self.symbol, self.number - 1)
 
+    def next_card(self):
+        if self.card_type == Card.WIND_CARD:
+            return None
+        if self.number == 9:
+            return None
+        return Card(self.card_type, self.symbol, self.number + 1)
+
+    @staticmethod
     def from_string(card_str):
         split = card_string.split("_")
         symbol = split[0]
