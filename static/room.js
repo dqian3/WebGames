@@ -1,18 +1,27 @@
 // Create WebSocket connection.
-function init (room_id) {
-    var socket = io();
-
-    $('form').submit(function (e) {
-        e.preventDefault();
-        socket.emit('chat', $('#m').val());
-        $('#m').val('');
-        return false;
-    });
+function init(roomId) {
+    let socket = io();
     
+    socket.on("join", (msg) => {
+        console.log(msg);
+    });
+
     socket.on("chat", (msg) => {
         $('#messages').append($('<li>').text(msg));
     });
 
 
+    $('#chat').submit(function (e) {
+        e.preventDefault();
+        
+        socket.emit('chat', {
+            'chat': $('#chatInput').val(),
+            'room': roomId
+        });
+        
+        $('#chatInput').val('');
+
+        return false;
+    });
 };
 
