@@ -1,27 +1,57 @@
 // Create WebSocket connection.
-function init(roomId) {
-    let socket = io();
-    
-    socket.on("join", (msg) => {
-        console.log(msg);
-    });
 
-    socket.on("chat", (msg) => {
-        $('#messages').append($('<li>').text(msg));
-    });
+function appendChat(username, message) {
+    if (username !== '') {
+        $('#messages').append($('<li>').text(username + ': ' + message));
+    } else {
+        $('#messages').append($('<li>').text(message));
+    }
+}
 
+class Room {
+    constructor(username, room) {        
+        this.socket = io();
+        this.username = username;
+        this.room = room;
 
-    $('#chat').submit(function (e) {
-        e.preventDefault();
-        
-        socket.emit('chat', {
-            'chat': $('#chatInput').val(),
-            'room': roomId
+        this.socket.on('connect', (data) => {
+            this.socket.emit('join', {
+                'username': this.username,
+                'room': this.room
+            });
         });
-        
-        $('#chatInput').val('');
 
-        return false;
-    });
-};
+        this.socket.on('join', (data) => {
+            console.log(data);
+        });
+    
+        this.socket.on('set_state', (data) => {
+            // TODO data['game']
+            for (let chat of data['chat']) {
+                console.log(chat)
+                appendChat(chat['username'], chat['msg']);
+            }
+        })
+
+        this.socket.on('chat', (data) => {
+            appendChat(data['username'], data['msg']);
+        });
+    
+    
+        $('#chat').submit((event) => {
+            event.preventDefault();
+            
+            this.socket.emit('chat', {
+                'username': this.username,
+                'msg': $('#chatInput').val(),
+                'room': this.room
+            });
+            
+            $('#chatInput').val('');
+    
+            return false;
+        });
+    }
+
+}
 

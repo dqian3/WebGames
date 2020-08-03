@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, request, render_template
 from flask_socketio import SocketIO, send, emit, join_room
 
 from room import Room
@@ -8,6 +8,7 @@ app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app)
 
 rooms = {}
+sessions = {}
 
 # Templates/API for creating rooms
 @app.route("/", methods=["GET"])
@@ -28,21 +29,57 @@ def render_room(id):
 
 
 # Socket code
+def commit_chat(r_id, username, msg):
+    room = rooms[r_id]
+
+    chat = {
+        'username': username,
+        'msg': msg
+    }
+
+    room.chat.append(chat)
+    socketio.emit("chat", chat, room=r_id)
+
+
 @socketio.on('connect')
 def connect():
     send("")
 
+@socketio.on('disconnect')
+def connect():
+    if (request.sid not in sessions):
+        return
+
+    r_id = sessions[request.sid]
+    username = rooms[r_id].session_disconnect(request.sid)    
+    commit_chat(r_id, '', '{} disconnected!'.format(username))
+
 @socketio.on('join')
 def join(data):
-    room = data['room']
-    join_room(room)
-    send("Joined!")
+    username = data['username']
+    r_id = data['room']
+    join_room(r_id)
+
+    rooms[r_id].session_connect(username, request.sid)
+    sessions[request.sid] = r_id
+
+    # Catch up this user with state
+    # TODO game state
+    emit('set_state', {
+        'chat': [chat for chat in rooms[r_id].chat]
+    })
+
+    # Emit to chat to notify others 
+    commit_chat(r_id, '', '{} connected!'.format(username))
 
 @socketio.on('chat')
 def chat(data):
-    room = data['room']
-    chat = data['chat']
-    emit("chat", chat, room=room)
+    username = data['username']
+    r_id = data['room']
+    chat = data['msg']
+
+    commit_chat(r_id, username, chat)
+
 
 if __name__ == '__main__':
     socketio.run(app)
