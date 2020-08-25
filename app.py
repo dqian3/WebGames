@@ -17,6 +17,9 @@ def render_index():
 
 @app.route("/create/<id>", methods=["POST"])
 def create_room(id):
+    if (id in rooms):
+        return "Room {} already exists, try again".format(id), 409
+
     rooms[id] = Room(id)
     return "Created room {}".format(id), 200
 

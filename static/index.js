@@ -13,6 +13,13 @@ async function goToRoom() {
     const roomId = uniqueUrl(10);
 
     const response = await fetch('/create/' + roomId, {method: 'POST'});
+    
+    /* Conflict, room already exists, try again */
+    if (response.status == 409) {
+        await goToRoom();
+        return;
+    }
+
     if (!response.ok) {
         throw new Error('Network error');
     }
