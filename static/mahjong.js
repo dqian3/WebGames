@@ -1,52 +1,73 @@
-function getCardImages() {
-    let images = {
-        "BACK": new Image(),
-        "DONG": new Image(),
-        "NAN": new Image(),
-        "XI": new Image(),
-        "BEI": new Image(),
-        "BAN": new Image(),
-        "FACAI": new Image(),
-        "ZHONG": new Image(),
-    };
-    
-    images["BACK"].src = "/static/images/MJhide.svg";
-    images["DONG"].src = "/static/images/MJf1-.svg";
-    images["NAN"].src = "/static/images/MJf2-.svg";
-    images["XI"].src = "/static/images/MJf3-.svg";
-    images["BEI"].src = "/static/images/MJf4-.svg";
-    images["BAN"].src = "/static/images/MJd3-.svg";
-    images["FACAI"].src = "/static/images/MJd2-.svg";
-    images["ZHONG"].src = "/static/images/MJd1-.svg";
-    
+// Dict of image objects
+const HEIGHT = 124;
+const WEIDTH = 150;
 
-    for (let i = 1; i <= 9; i++) {
-        images["TONG" + i] = new Image();
-        images["TIAO" + i] = new Image();
-        images["WAN" + i] = new Image();
-
-        images["TONG" + i].src = "/static/images/MJt" + i + "-.svg";
-        images["TIAO" + i].src = "/static/images/MJs" + i + "-.svg";
-        images["WAN" + i].src = "/static/images/MJw" + i + "-.svg";
-    }
-
-    return images;
-}
-
-function initMahjong() {
-    let canvas = document.getElementById('gameCanvas');
-
-    if (canvas.getContext) {
-        let ctx = canvas.getContext('2d');
-        let images = getCardImages();
+class Mahjong {
+    constructor(sendMessage) {             
+        // Callback for sending message
+        this.sendMessage = sendMessage;
         
-        let interval = setInterval(function() {
-            let i = 0;
-            for (const card in images) {
-                ctx.drawImage(images[card], 112 * (i % 8), 150 * Math.floor(i / 8), 124, 150);
-                i++;
+        this.p = new p5(this.getDraw());
+    }
+
+    processMessage(data) {
+        console.log(data);
+    }
+
+    // Code to draw on canvas
+    getDraw() {
+        return (p) => {   
+            let images;
+
+            let getCardImages = function () {
+                let ret = {};
+            
+                ret["BACK"] = p.loadImage("/static/images/MJhide.svg");
+                ret["DONG"] = p.loadImage("/static/images/MJf1-.svg");
+                ret["NAN"] = p.loadImage("/static/images/MJf2-.svg");
+                ret["XI"] = p.loadImage("/static/images/MJf3-.svg");
+                ret["BEI"] = p.loadImage("/static/images/MJf4-.svg");
+                ret["BAN"] = p.loadImage("/static/images/MJd3-.svg");
+                ret["FACAI"] = p.loadImage("/static/images/MJd2-.svg");
+                ret["ZHONG"] = p.loadImage("/static/images/MJd1-.svg");
+                
+            
+                for (let i = 1; i <= 9; i++) {
+                    ret["TONG" + i] = new Image();
+                    ret["TIAO" + i] = new Image();
+                    ret["WAN" + i] = new Image();
+            
+                    ret["TONG" + i] = p.loadImage("/static/images/MJt" + i + "-.svg");
+                    ret["TIAO" + i] = p.loadImage("/static/images/MJs" + i + "-.svg");
+                    ret["WAN" + i] = p.loadImage("/static/images/MJw" + i + "-.svg");
+                }
+            
+                return ret;
             }
-        }, 2000);
+            
+            p.preload = function () {
+                images = getCardImages();
+            }
+            
+            p.setup = function() {
+                let canvas = p.createCanvas(800, 800);
+                canvas.parent('game');     
+                let i = 0;
+                for (const card in images) {
+                    p.image(images[card], 112 * (i % 8), 150 * Math.floor(i / 8), 124, 150);
+                    i++;
+                }
+            }
+            
+            p.mouseClicked = () => {
+                this.sendMessage({
+                    "x": p.mouseX,
+                    "y": p.mouseY 
+                });
+            }
+        }
 
     }
+
 }
+

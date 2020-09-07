@@ -53,5 +53,22 @@ class Room {
         });
     }
 
+    startGame() {
+        this.game = new Mahjong(this.sendMessageCallback());
+
+        this.socket.on('game', (data) => {
+            this.game.processMessage(data);
+        });
+    }
+
+    sendMessageCallback() {
+        return (msg) => {
+            this.socket.emit('game', {
+                'username': this.username,
+                'msg': msg,
+                'room': this.room,
+            });
+        };
+    }
 }
 

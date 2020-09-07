@@ -83,6 +83,13 @@ def chat(data):
 
     commit_chat(r_id, username, chat)
 
+@socketio.on('game')
+def game(data):
+    username = data['username']
+    r_id = data['room']
+
+    socketio.emit("game", data['msg'], room=r_id)
+
 
 if __name__ == '__main__':
     socketio.run(app)
